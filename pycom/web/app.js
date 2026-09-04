@@ -313,35 +313,143 @@ const PROMOS_BANCARIAS={
   ],
 };
 
+let listaSuper=JSON.parse(localStorage.getItem('listaSuper')||'[]');
+function guardarLista(){ localStorage.setItem('listaSuper', JSON.stringify(listaSuper)); updateBadge(); }
+function updateBadge(){
+  const b=document.getElementById('badgeLista');
+  if(!b) return;
+  if(listaSuper.length>0){ b.textContent=listaSuper.length; b.style.display='inline'; } else b.style.display='none';
+}
+function agregarALista(prod){
+  listaSuper.push(prod);
+  guardarLista();
+  // feedback
+  const s=document.getElementById('status');
+  s.textContent=`"${prod.nombre.slice(0,30)}" agregado a ${prod.supermercado} • Lista: ${listaSuper.length}`;
+  s.style.color='#00796B';
+  setTimeout(()=>{ if(s.textContent.includes('agregado')) s.style.color=''; }, 2000);
+}
+function quitarDeLista(idx){
+  listaSuper.splice(idx,1);
+  guardarLista();
+  renderLista();
+}
+function renderLista(){
+  const box=document.getElementById('lista');
+  box.innerHTML='';
+  if(listaSuper.length===0){
+    box.innerHTML='<div class="card" style="text-align:center;padding:24px;color:#6b7280"><div style="font-size:32px">🛒</div><b>Tu lista está vacía</b><br>Agregá productos desde Comparar<br><small>Tip: tocá “Agregar” en cada producto</small></div>';
+    return;
+  }
+  const porSuper={};
+  listaSuper.forEach(p=> (porSuper[p.supermercado]=porSuper[p.supermercado]||[]).push(p));
+  const total=listaSuper.reduce((a,p)=>a+p.precio_final,0);
+  const resumen=document.createElement('div');
+  resumen.className='card summary';
+  resumen.innerHTML=`<b>🛒 Mi Lista: ${listaSuper.length} productos • Total: ${formatearPrecio(total)}</b><br><small>${Object.entries(porSuper).map(([k,v])=>`${k}: ${v.length}`).join(' • ')}</small>`;
+  box.appendChild(resumen);
+  // Agrupado por super
+  for(let superN of ["MasOnline","VEA","Carrefour"]){
+    if(!porSuper[superN]) continue;
+    const h=document.createElement('div');
+    h.className=`super-header ${superN}`;
+    h.innerHTML=`🛒 ${superN} <span class="count">(${porSuper[superN].length})</span>`;
+    box.appendChild(h);
+    porSuper[superN].forEach((p,idxOriginal)=>{
+      const realIdx=listaSuper.indexOf(p);
+      const card=document.createElement('div');
+      card.className='prod';
+      card.innerHTML=`
+        <img src="${p.imagen||''}" style="width:56px;height:56px;object-fit:contain;background:#f9fafb;border-radius:8px" onerror="this.style.display='none'">
+        <div class="prod-info" style="flex:1">
+          <div class="prod-name">${p.nombre.slice(0,44)}</div>
+          <div style="font-size:11px;color:#fff;background:${p.supermercado==='MasOnline'?'#1565C0':p.supermercado==='VEA'?'#C62828':'#0D47A1'};display:inline-block;padding:2px 6px;border-radius:6px;margin:2px 0">${p.supermercado}</div>
+          <div class="price">💲 ${p.precio_str}</div>
+          <a class="link" href="${p.url}" target="_blank">🔗 Ver en tienda</a>
+        </div>
+        <button onclick="quitarDeLista(${realIdx})" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer">Quitar</button>`;
+      box.appendChild(card);
+    });
+  }
+  const vaciar=document.createElement('button');
+  vaciar.textContent='Vaciar lista';
+  vaciar.style.cssText='width:100%;margin-top:12px;background:#fff;border:1.5px solid #00796B;color:#00796B;border-radius:12px;padding:10px;font-weight:700;cursor:pointer';
+  vaciar.onclick=()=>{ if(confirm('¿Vaciar lista?')){ listaSuper=[]; guardarLista(); renderLista(); }};
+  box.appendChild(vaciar);
+}
+
 function showTab(t){
   document.getElementById('results').style.display=t==='comparar'?'flex':'none';
   document.getElementById('promos').style.display=t==='promos'?'block':'none';
+  document.getElementById('lista').style.display=t==='lista'?'block':'none';
   document.getElementById('status').style.display=t==='comparar'?'block':'none';
   document.getElementById('nav-comparar').classList.toggle('active',t==='comparar');
   document.getElementById('nav-promos').classList.toggle('active',t==='promos');
+  document.getElementById('nav-lista').classList.toggle('active',t==='lista');
   if(t==='promos') cargarPromosBancarias();
+  if(t==='lista') renderLista();
 }
 
-function cargarPromosBancarias(){
+let ultimosResultados=[];
+function agregarAListaByIdx(idx){
+  const p=ultimosResultados[idx];
+  if(p) agregarALista(p);
+}
+async function cargarPromosBancarias(){
   const box=document.getElementById('promos');
+  box.innerHTML='<div class="card" style="text-align:center;padding:16px;color:#6b7280">⏳ Cargando promos dinámicas de cada super...</div>';
+  // Intentar fetch dinámico, si falla usa estáticas
+  const dinamicas={};
+  try{
+    const queries={MasOnline:"leche",VEA:"leche",Carrefour:"leche"};
+    for(let superN of ["MasOnline","VEA","Carrefour"]){
+      try{
+        const url=SUPERS[superN].replace("{q}",encodeURIComponent(queries[superN]));
+        const prods=await fetchJson(url);
+        const set=new Set();
+        for(let prod of prods.slice(0,5)){
+          for(let cname of [...Object.values(prod.productClusters||{}), ...Object.values(prod.clusterHighlights||{})]){
+            const low=cname.toLowerCase();
+            if(["cencopay","csi","cuotas","banco","tarjeta","naranja","galicia","bbva","santander","nacion","modo","mercado pago"].some(k=>low.includes(k)) && cname.length<80 && !low.includes("colection")){
+              set.add(cname.trim());
+            }
+          }
+        }
+        if(set.size>0) dinamicas[superN]=Array.from(set).slice(0,3);
+      }catch{}
+    }
+  }catch{}
   box.innerHTML='';
   for(let superN of ["MasOnline","VEA","Carrefour"]){
-    const promos=PROMOS_BANCARIAS[superN]||[];
+    const base=PROMOS_BANCARIAS[superN]||[];
+    const extras=(dinamicas[superN]||[]).map(d=>({banco:"Detectada",promo:d,detalle:"En productos - tiempo real"}));
+    const promos=[...base, ...extras].slice(0,6);
     const card=document.createElement('div');
     card.className=`promo-banco ${superN}`;
-    card.innerHTML=`<h3>🏦 ${superN} • ${promos.length} promos</h3>`;
-    promos.slice(0,6).forEach(p=>{
+    card.innerHTML=`<h3>🏦 ${superN} • ${promos.length} promos ${extras.length?'<span style="background:#e8f5e9;color:#1b5e20;padding:2px 6px;border-radius:8px;font-size:10px">+'+extras.length+' dinámicas</span>':''}</h3>`;
+    promos.forEach(p=>{
       const d=document.createElement('div');
       d.className='item';
-      d.textContent=`• ${p.banco}: ${p.promo} — ${p.detalle}`;
+      d.innerHTML=`• <b>${p.banco}:</b> ${p.promo} <span style="color:#6b7280">— ${p.detalle}</span>`;
       card.appendChild(d);
     });
+    if(extras.length===0){
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:10px;color:#9ca3af;margin-top:4px';
+      hint.textContent='Mostrando promos base. Tocá Actualizar de nuevo para reintentar dinámicas.';
+      card.appendChild(hint);
+    }
     box.appendChild(card);
   }
   const tip=document.createElement('div');
   tip.style.cssText='text-align:center;color:#6b7280;font-size:11px;margin-top:8px';
-  tip.textContent='💡 Tip: Las promos de pago aparecen también en cada producto cuando aplican.';
+  tip.innerHTML='💡 Tip: Tocá <b>Actualizar</b> para refrescar promos en tiempo real desde cada super.<br>Las promos de pago aparecen también en cada producto.';
   box.appendChild(tip);
+  const btn=document.createElement('button');
+  btn.textContent='🔄 Actualizar promos';
+  btn.style.cssText='width:100%;margin-top:8px;background:#00796B;color:#fff;border:none;border-radius:12px;padding:10px;font-weight:700;cursor:pointer';
+  btn.onclick=cargarPromosBancarias;
+  box.appendChild(btn);
 }
 
 async function buscar(){
@@ -363,6 +471,7 @@ async function buscar(){
 }
 
 function renderResultados(res,q){
+  ultimosResultados=res;
   const status=document.getElementById('status');
   const box=document.getElementById('results');
   box.innerHTML='';
@@ -404,16 +513,21 @@ function renderResultados(res,q){
       const card=document.createElement('div');
       card.className='prod';
       const imgSrc=r.imagen||'';
+      const idx=res.indexOf(r);
       card.innerHTML=`
         <div style="width:74px;height:74px;min-width:74px;background:#f9fafb;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden">
           ${imgSrc?`<img src="${imgSrc}" style="width:100%;height:100%;object-fit:contain" loading="lazy">`:`<span style="font-size:28px">🛍️</span>`}
         </div>
-        <div class="prod-info">
+        <div class="prod-info" style="flex:1">
           <div class="prod-name">${r.nombre.slice(0,48)}</div>
+          <div style="font-size:11px;color:#fff;background:${r.supermercado==='MasOnline'?'#1565C0':r.supermercado==='VEA'?'#C62828':'#0D47A1'};display:inline-block;padding:2px 6px;border-radius:6px;margin:2px 0">${r.supermercado}</div>
           <div class="price ${esMin?'cheap':''}">💲 ${r.precio_str}${esMin?' <span class="badge">MÁS BARATO x1</span>':''}${r.precio_original&&r.precio_original>r.precio_final&&r.precio_original/r.precio_final<=3?`<span class="old">antes ${formatearPrecio(r.precio_original)}</span>`:''}</div>
           ${(r.promociones||[]).slice(0,2).map(p=>`<div class="promo ${p===r.promo_iguales&&esMinIg?'best':''}">${p}${p===r.promo_iguales&&esMinIg?' ◄ MÁS BARATO c/u':''}</div>`).join('')}
           ${!esMin&&esMinIg?`<div class="effective">→ ${formatearPrecio(peIg)} c/u ¡más barato con promo!</div>`:''}
-          <a class="link" href="${r.url}" target="_blank" rel="noopener">🔗 Ver en tienda</a>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <a class="link" href="${r.url}" target="_blank" rel="noopener">🔗 Ver</a>
+            <button onclick="agregarAListaByIdx(${idx})" style="background:#00796B;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer">+ Agregar a lista</button>
+          </div>
         </div>`;
       box.appendChild(card);
     }
@@ -437,6 +551,7 @@ function renderChips(){
 }
 document.addEventListener('DOMContentLoaded',()=>{
   renderChips();
+  updateBadge();
   document.getElementById('btnBuscar').onclick=buscar;
   document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') buscar(); });
   // Demo inicial
