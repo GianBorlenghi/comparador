@@ -632,12 +632,21 @@ def buscar_en_super(nombre_super: str, url_template: str, query: str, terminos: 
                     continue
 
                 link = prod.get("link") or prod.get("linkText") or ""
-                # link puede ser sin dominio
                 if link and link.startswith("/"):
                     base = url_template.split("/api")[0]
                     link = base + link
                 elif link and not link.startswith("http"):
                     link = "https://" + link
+                # Imagen para APK
+                imagen = ""
+                try:
+                    it = prod.get("items", [])
+                    if it and it[0].get("images"):
+                        imagen = it[0]["images"][0].get("imageUrl", "")
+                        if imagen.startswith("//"):
+                            imagen = "https:" + imagen
+                except Exception:
+                    imagen = ""
 
                 mejor = _mejor_oferta_de_producto(prod)
                 if mejor is None:
@@ -660,6 +669,7 @@ def buscar_en_super(nombre_super: str, url_template: str, query: str, terminos: 
                 resultados.append({
                     "supermercado":    nombre_super,
                     "nombre":          nombre_prod,
+                    "imagen":          imagen,
                     "precio_final":    float(pf),
                     "precio_original": float(po) if po is not None else None,
                     "precio_str":      formatear_precio(float(pf)),
