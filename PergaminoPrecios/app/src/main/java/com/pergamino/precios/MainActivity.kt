@@ -64,10 +64,24 @@ class MainActivity : AppCompatActivity() {
             val chip = Chip(this).apply {
                 text = txt
                 isCheckable = false
-                setOnClickListener { etQuery.setText(txt); buscar(txt, tvStatus) }
+                isClickable = true
+                isFocusable = true
+                chipBackgroundColor = getColorStateList(android.R.color.transparent)
+                setChipBackgroundColorResource(android.R.color.transparent)
+                setTextColor(getColor(R.color.teal))
+                chipStrokeColor = getColorStateList(R.color.teal)
+                chipStrokeWidth = 1.5f
+                setOnClickListener {
+                    etQuery.setText(txt)
+                    etQuery.setSelection(txt.length)
+                    buscar(txt, tvStatus)
+                }
             }
             chipsBox.addView(chip)
         }
+        // Hacer chips scrolleables y bien distribuidos
+        chipsBox.isSingleLine = true
+        chipsBox.chipSpacingHorizontal = 8f
 
         adapter = ProdAdapter(emptyList(), 
             onLink = { url -> try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch {} },
