@@ -24,22 +24,34 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython==0.29.33
 
-      - name: Accept Android Licenses
+      - name: Setup Android SDK (fix build-tools 37)
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls -la $ANDROID_HOME/cmdline-tools/latest/bin/ 2>&1 | head -n 20 || true
+          # Accept all licenses for GitHub's SDK
           mkdir -p ~/.android
           echo "y" > ~/.android/repositories.cfg || true
-          # Pre-accept licenses via sdkmanager if available
-          yes | sdkmanager --licenses 2>/dev/null || true
-          # Alternative: let buildozer handle it but ensure aidl exists
-          sudo mkdir -p /opt/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" | sudo tee /opt/android-sdk/licenses/android-sdk-license > /dev/null || true
-          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" | sudo tee -a /opt/android-sdk/licenses/android-sdk-license > /dev/null || true
-          echo "24333f8a63b6825ea9c5514f83c2589b7190390" | sudo tee -a /opt/android-sdk/licenses/android-sdk-license > /dev/null || true
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>&1 | head -n 20 || true
+          # Install stable build-tools 33.0.2 explicitly (avoid 37 license issue)
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33" "platform-tools" 2>&1 | tail -n 20 || true
+          # Pre-create licenses for buildozer's private SDK too
+          for d in "$HOME/.buildozer/android/platform/android-sdk" "/opt/android-sdk"; do
+            mkdir -p "$d/licenses" 2>/dev/null || true
+            echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > "$d/licenses/android-sdk-license" 2>/dev/null || true
+            echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> "$d/licenses/android-sdk-license" 2>/dev/null || true
+            echo "24333f8a63b6825ea9c5514f83c2589b7190390" >> "$d/licenses/android-sdk-license" 2>/dev/null || true
+            echo "y" > "$d/licenses/android-sdk-preview-license" 2>/dev/null || true
+          done
+          echo "Licenses done, build-tools:"
+          ls $ANDROID_HOME/build-tools/ 2>&1 | head -n 20 || true
+          ls ~/.buildozer/android/platform/android-sdk/build-tools/ 2>&1 | head -n 20 || true
 
       - name: Build APK
         working-directory: pycom/app
         run: |
-          buildozer android debug
+          # Force buildozer to not try to auto-update to 37
+          buildozer android debug --verbose 2>&1 | tail -n 100
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
