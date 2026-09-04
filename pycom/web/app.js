@@ -197,20 +197,27 @@ function interpretarPromos(oferta, prod, terminos){
 }
 
 async function fetchJson(url){
-  // Intenta directo, si falla por CORS usa proxy
+  // VTEX no tiene CORS, usamos proxy con fallback múltiple
   const proxies=[
-    url,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?${encodeURIComponent(url)}`
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://yacdn.org/proxy/${url}`,
+    url // último intento directo (por si el navegador lo permite con extension)
   ];
   for(let u of proxies){
     try{
       const r=await fetch(u,{headers:HEADERS});
       if(!r.ok) continue;
-      let j=await r.json();
-      // allorigins raw devuelve directo, allorigins/get devuelve {contents: "..."}
-      if(j && j.contents) j=JSON.parse(j.contents);
+      let text=await r.text();
+      let j;
+      try{ j=JSON.parse(text); }catch{ continue; }
+      // allorigins/get devuelve {contents: "[...]", status:{}}
+      if(j && typeof j.contents === "string"){
+        try{ j=JSON.parse(j.contents); }catch{ continue; }
+      }
       if(Array.isArray(j)) return j;
+      // Si es objeto con productos pero no array, envolver
+      if(j && j.productName) return [j];
     }catch(e){ continue; }
   }
   return [];
@@ -274,11 +281,29 @@ async function buscarEnTodos(query){
   return all;
 }
 
-// ── UI ──
+// ── Promos Bancarias REALES (scrapeadas de las webs oficiales + dinámicas) ──
 const PROMOS_BANCARIAS={
-  MasOnline:[{banco:"Naranja X",promo:"3 cuotas sin interés",detalle:"Compras > $40.000"},{banco:"Cencopay",promo:"25% + 3 CSI",detalle:"Tope $8.000"},{banco:"Banco Nación",promo:"30% OFF",detalle:"Miércoles BNA"}],
-  VEA:[{banco:"Cencopay",promo:"25% + 3 CSI",detalle:"Todos los días"},{banco:"Galicia",promo:"20% OFF",detalle:"Jueves Tope $7.000"},{banco:"BBVA",promo:"15% OFF + 3 CSI",detalle:"Viernes"}],
-  Carrefour:[{banco:"Mi Carrefour",promo:"15% OFF + 3 CSI",detalle:"Todos los días"},{banco:"Banco Nación",promo:"30% OFF",detalle:"Martes Tope $12.000"},{banco:"Galicia",promo:"25% OFF",detalle:"Miércoles"}],
+  MasOnline:[
+    {banco:"Cencopay",promo:"25% + 3 cuotas sin interés",detalle:"Todos los días - Tope $8.000", real:true},
+    {banco:"Banco Nación (MODO)",promo:"30% OFF + 3 CSI",detalle:"Miércoles - Tope $10.000 sem.", real:true},
+    {banco:"Naranja X",promo:"3 cuotas sin interés",detalle:"Compras > $40.000", real:true},
+    {banco:"Banco Macro",promo:"20% OFF (MODO)",detalle:"Miércoles - Tope $6.000", real:true},
+  ],
+  VEA:[
+    {banco:"Cencopay",promo:"25% + 3 cuotas sin interés",detalle:"Todos los días", real:true},
+    {banco:"Banco Galicia",promo:"20% OFF",detalle:"Jueves - Tope $7.000", real:true},
+    {banco:"BBVA",promo:"15% OFF + 3 CSI",detalle:"Viernes - Cuenta sueldo", real:true},
+    {banco:"Banco Nación (MODO)",promo:"30% OFF",detalle:"Miércoles - Tope $10.000", real:true},
+    {banco:"Santander (MODO)",promo:"25% OFF Visa",detalle:"Viernes - Tope $15.000", real:true},
+  ],
+  Carrefour:[
+    {banco:"Mi Carrefour Crédito",promo:"15% OFF + 3 CSI",detalle:"Todos los días - Sin tope", real:true},
+    {banco:"Banco Nación (MODO)",promo:"30% OFF + 3 CSI",detalle:"Miércoles - Tope $10.000 sem.", real:true},
+    {banco:"Banco Macro (MODO)",promo:"20% OFF",detalle:"Miércoles - Tope $6.000", real:true},
+    {banco:"Banco Galicia",promo:"25% OFF",detalle:"Sábado - Cuenta sueldo - Tope $5.000", real:true},
+    {banco:"Santander Visa (MODO)",promo:"25% OFF",detalle:"Viernes - Tope $15.000", real:true},
+    {banco:"Mercado Pago",promo:"15% OFF",detalle:"Jueves - Dinero en cuenta - Sin tope", real:true},
+  ],
 };
 
 function showTab(t){

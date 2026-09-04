@@ -1,51 +1,70 @@
-:root{--teal:#00796B;--teal-dark:#004D40;--bg:#f5f7f7;--card:#ffffff;--text:#1a1a1a;--hint:#6b7280;--radius:16px}
-*{box-sizing:border-box;font-family: 'Inter', system-ui, -apple-system, sans-serif}
-body{margin:0;background:var(--bg);color:var(--text)}
-header{background:var(--teal);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10}
-header h1{margin:0;font-size:20px;font-weight:700}
-header p{margin:2px 0 0;font-size:12px;opacity:.9}
-.search-card{background:var(--card);margin:12px;border-radius:var(--radius);padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.search-row{display:flex;gap:8px}
-.search-row input{flex:1;border:1.5px solid #e5e7eb;border-radius:24px;padding:12px 16px;font-size:15px;outline:none}
-.search-row input:focus{border-color:var(--teal)}
-.search-row button{background:var(--teal);color:#fff;border:none;border-radius:24px;padding:0 18px;font-weight:600;cursor:pointer}
-.search-row button:active{background:var(--teal-dark)}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:6px 2px 2px;scrollbar-width:none}
+:root{--teal:#00796B;--teal-dark:#004D40;--teal-light:#e0f2f1;--bg:#f5f7f7;--card:#ffffff;--text:#1a1a1a;--hint:#6b7280;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,.07)}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,sans-serif}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+header{background:var(--teal);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+header h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.3px}
+header p{margin:3px 0 0;font-size:12px;opacity:.92}
+.search-card{background:var(--card);margin:12px;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);max-width:720px;margin-left:auto;margin-right:auto;width:calc(100% - 24px)}
+.search-row{display:flex;gap:8px;align-items:center}
+.search-row input{flex:1;min-width:0;border:1.5px solid #e5e7eb;border-radius:24px;padding:12px 16px;font-size:15px;outline:none;transition:border .2s}
+.search-row input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,121,107,.12)}
+.search-row button{background:var(--teal);color:#fff;border:none;border-radius:24px;padding:11px 18px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s}
+.search-row button:active{background:var(--teal-dark);transform:scale(.98)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:8px 2px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
-.chip{white-space:nowrap;background:#e0f2f1;color:var(--teal);border:none;border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer}
-.chip.hist{background:#fff3e0;color:#e65100}
-#status{text-align:center;color:var(--hint);font-size:12px;margin:4px 0 8px}
-#results{padding:0 12px 80px;display:flex;flex-direction:column;gap:12px}
-.card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.card.summary{background:#e8f5e9;border:1px solid #a5d6a7}
-.super-header{display:flex;align-items:center;gap:8px;margin:8px 4px 0;font-weight:700;font-size:15px}
-.super-header .count{font-weight:400;font-size:12px;color:var(--hint);margin-left:4px}
+.chip{white-space:nowrap;background:var(--teal-light);color:var(--teal);border:none;border-radius:20px;padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;flex-shrink:0;transition:transform .15s}
+.chip:active{transform:scale(.96)}
+.chip.hist{background:#fff3e0;color:#bf360c}
+#status{text-align:center;color:var(--hint);font-size:12px;margin:6px 12px;min-height:16px;max-width:720px;margin-left:auto;margin-right:auto;padding:0 12px;word-break:break-word}
+#results{padding:0 12px 90px;display:flex;flex-direction:column;gap:12px;max-width:720px;margin:0 auto;width:100%}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.card.summary{background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);border:1px solid #a5d6a7}
+.super-header{display:flex;align-items:center;gap:8px;margin:10px 4px 2px;font-weight:800;font-size:14px;letter-spacing:-.2px}
+.super-header .count{font-weight:500;font-size:11px;color:var(--hint);background:#fff;padding:2px 8px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .super-header.MasOnline{color:#1565C0}
 .super-header.VEA{color:#C62828}
 .super-header.Carrefour{color:#0D47A1}
-.prod{display:flex;gap:10px;background:var(--card);border-radius:var(--radius);padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);align-items:center}
-.prod img{width:74px;height:74px;object-fit:contain;background:#f9fafb;border-radius:10px}
-.prod-info{flex:1;min-width:0}
-.prod-name{font-weight:600;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.price{font-weight:800;font-size:16px;margin:2px 0}
-.price .old{font-weight:400;font-size:11px;color:var(--hint);text-decoration:line-through;margin-left:6px}
+.prod{display:flex;gap:12px;background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 6px rgba(0,0,0,.06);align-items:flex-start;transition:transform .15s, box-shadow .15s}
+.prod:active{transform:scale(.99);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.prod img{width:74px;height:74px;min-width:74px;object-fit:contain;background:#f9fafb;border-radius:12px;border:1px solid #f3f4f6}
+.prod-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.prod-name{font-weight:700;font-size:13.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.price{font-weight:800;font-size:17px;margin:1px 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.price .old{font-weight:500;font-size:11px;color:var(--hint);text-decoration:line-through;background:#f9fafb;padding:2px 6px;border-radius:6px}
 .price.cheap{color:#2e7d32}
-.promo{font-size:11px;color:#6d4c00;background:#fff8e1;border-radius:8px;padding:3px 8px;display:inline-block;margin:2px 2px 0 0}
-.promo.best{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7}
-.effective{font-size:11px;color:#2e7d32;font-weight:600}
-.link{color:var(--teal);font-size:11px;text-decoration:none}
+.promo{font-size:11px;color:#5d4037;background:#fff8e1;border-radius:8px;padding:4px 8px;display:inline-block;margin:2px 2px 0 0;line-height:1.2;max-width:100%;word-break:break-word}
+.promo.best{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;font-weight:600}
+.effective{font-size:11px;color:#2e7d32;font-weight:700;background:#e8f5e9;padding:3px 8px;border-radius:8px;display:inline-block;margin-top:2px}
+.link{color:var(--teal);font-size:11.5px;text-decoration:none;font-weight:600;margin-top:4px;display:inline-flex;align-items:center;gap:4px}
 .link:active{opacity:.6}
-.badge{font-size:10px;background:var(--teal);color:#fff;border-radius:8px;padding:2px 6px;margin-left:6px}
-.badge.promo{background:#ef6c00}
-.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;padding:6px 0 8px;z-index:20}
-.nav button{flex:1;background:none;border:none;font-size:11px;color:var(--hint);cursor:pointer;padding:4px}
+.badge{font-size:10px;background:var(--teal);color:#fff;border-radius:8px;padding:2px 7px;margin-left:6px;font-weight:700;letter-spacing:.2px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;padding:6px 0 calc(8px + env(safe-area-inset-bottom));z-index:20;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.nav button{flex:1;background:none;border:none;font-size:11px;color:var(--hint);cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:500;transition:color .2s}
 .nav button.active{color:var(--teal);font-weight:700}
-.nav button span{font-size:20px;display:block}
-#promos{display:none;padding:12px 12px 80px}
-.promo-banco{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:12px;border-left:4px solid var(--teal)}
+.nav button span{font-size:22px;display:block;line-height:1}
+#promos{display:none;padding:12px 12px 90px;max-width:720px;margin:0 auto;width:100%}
+.promo-banco{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;border-left:4px solid var(--teal);transition:transform .15s}
+.promo-banco:active{transform:scale(.99)}
 .promo-banco.MasOnline{border-left-color:#1565C0}
 .promo-banco.VEA{border-left-color:#C62828}
 .promo-banco.Carrefour{border-left-color:#0D47A1}
-.promo-banco h3{margin:0 0 6px;font-size:14px}
-.promo-banco .item{font-size:12px;padding:6px 0;border-bottom:1px solid #f3f4f6}
+.promo-banco h3{margin:0 0 8px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.promo-banco .item{font-size:12.5px;padding:8px 0;border-bottom:1px solid #f3f4f6;line-height:1.3}
 .promo-banco .item:last-child{border:none}
+.promo-banco .item b{color:var(--text)}
+@media (min-width: 600px){
+  header{padding:16px 20px}
+  header h1{font-size:22px}
+  .search-card{padding:16px}
+  .prod{padding:14px}
+  .prod img{width:88px;height:88px;min-width:88px}
+  .prod-name{font-size:14px}
+  .price{font-size:18px}
+}
+@media (max-width: 380px){
+  .search-row{flex-direction:column}
+  .search-row button{width:100%}
+  .prod{flex-direction:column;align-items:stretch}
+  .prod img{width:100%;height:140px;min-width:auto}
+}
