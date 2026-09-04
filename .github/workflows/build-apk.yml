@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK Nativo
 
 on:
   push:
@@ -10,13 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - uses: actions/setup-java@v4
         with:
-          workdir: pycom/app
-          buildozer_version: stable
-          command: buildozer android debug
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Build Debug APK
+        working-directory: pycom/android
+        run: |
+          chmod +x gradlew || true
+          # Si no hay wrapper, usa gradle directo
+          if [ -f "gradlew" ]; then ./gradlew assembleDebug --stacktrace
+          else gradle assembleDebug --stacktrace
+          fi
+      - name: List APK
+        if: always()
+        run: |
+          find pycom -name "*.apk" -type f 2>/dev/null | head -n 20 || true
+          ls -lh pycom/android/app/build/outputs/apk/debug/ 2>&1 | head -n 20 || true
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: PergaminoPrecios-APK
-          path: pycom/app/bin/*.apk
+          name: PergaminoPrecios-Nativo-APK
+          path: pycom/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn

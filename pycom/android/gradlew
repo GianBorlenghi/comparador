@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Simple wrapper to use system gradle if available, else download
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle "$@"
+else
+  echo "Gradle not found, trying wrapper download..."
+  GRADLE_VERSION=8.6
+  wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip
+  unzip -q /tmp/gradle.zip -d /tmp
+  /tmp/gradle-${GRADLE_VERSION}/bin/gradle "$@"
+fi
