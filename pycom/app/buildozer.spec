@@ -17,7 +17,6 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
-android.sdk_path = /opt/android-sdk
 android.accept_sdk_license_agreement = True
 android.ant = auto
 android.build_tools_version = 33.0.2
