@@ -197,12 +197,19 @@ function interpretarPromos(oferta, prod, terminos){
 }
 
 async function fetchJson(url){
-  // VTEX no tiene CORS, usamos proxy con fallback múltiple
-  const proxies=[
+  // VTEX no tiene CORS -> usamos proxy local en localhost, y proxies públicos como fallback
+  const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  const localProxy = `http://localhost:8001/proxy?url=${encodeURIComponent(url)}`;
+  const proxies = isLocalhost ? [
+    localProxy,
     `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
     `https://yacdn.org/proxy/${url}`,
-    url // último intento directo (por si el navegador lo permite con extension)
+    url
+  ] : [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://yacdn.org/proxy/${url}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url
   ];
   for(let u of proxies){
     try{

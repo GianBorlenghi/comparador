@@ -10,7 +10,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   // NO interceptar APIs ni proxies CORS - dejar pasar directo
-  if (url.hostname.includes('masonline.com.ar') || url.hostname.includes('vea.com.ar') || url.hostname.includes('carrefour.com.ar') || url.hostname.includes('allorigins.win') || url.hostname.includes('corsproxy.io') || url.hostname.includes('yacdn.org') || url.hostname.includes('cors.sh')) {
+  if (url.hostname.includes('masonline.com.ar') || url.hostname.includes('vea.com.ar') || url.hostname.includes('carrefour.com.ar') || url.hostname.includes('allorigins.win') || url.hostname.includes('corsproxy.io') || url.hostname.includes('yacdn.org') || url.hostname.includes('cors.sh') || url.port === "8001" || url.pathname.startsWith("/proxy")) {
     return;
   }
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(()=>caches.match('./index.html'))));
