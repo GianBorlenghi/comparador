@@ -49,12 +49,22 @@ jobs:
 
       - name: Build APK
         working-directory: pycom/app
+        timeout-minutes: 40
         run: |
-          # Force buildozer to not try to auto-update to 37
-          buildozer android debug --verbose 2>&1 | tail -n 100
+          buildozer android debug
+
+      - name: List APK
+        if: always()
+        run: |
+          echo "=== Buscando APK ==="
+          find . -name "*.apk" -type f 2>/dev/null | head -n 20 || true
+          ls -lh pycom/app/bin/ 2>&1 | head -n 30 || true
+          ls -lh pycom/app/.buildozer/ 2>&1 | head -n 30 || true
 
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: PergaminoPrecios-APK
           path: pycom/app/bin/*.apk
+          if-no-files-found: warn
