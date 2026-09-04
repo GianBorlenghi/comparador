@@ -8,9 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Usamos Docker con Buildozer ya configurado (evita sdkmanager 37 / aidl)
     container:
-      image: kivymd/buildozer:latest
+      image: thopiekar/buildozer:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,10 +17,7 @@ jobs:
       - name: Build APK (Docker)
         working-directory: pycom/app
         run: |
-          # Limpia cache corrupta si existe
           rm -rf ~/.buildozer 2>/dev/null || true
-          # Fuerza build-tools estable
-          sed -i 's/^android.build_tools_version.*/android.build_tools_version = 33.0.2/' buildozer.spec || echo "android.build_tools_version = 33.0.2" >> buildozer.spec
           buildozer android debug
 
       - name: List APK
