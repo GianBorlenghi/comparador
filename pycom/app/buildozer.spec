@@ -20,6 +20,7 @@ android.ndk = 25b
 android.accept_sdk_license_agreement = True
 android.ant = auto
 android.build_tools_version = 33.0.2
+android.sdk_path = /usr/local/lib/android/sdk
 p4a.branch = master
 p4a.bootstrap = sdl2
 p4a.setup_py = False

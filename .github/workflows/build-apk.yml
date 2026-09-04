@@ -27,22 +27,31 @@ jobs:
           pip install --upgrade pip
           pip install buildozer==1.5.0 cython==0.29.33
 
-      - name: Pre-accept Android licenses (fix build-tools 37)
+      - name: Pre-accept Android licenses + fix sdkmanager path
         run: |
+          # Licencias para el SDK privado de Buildozer
           mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "24333f8a63b6825ea9c5514f83c2589b7190390" >> ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "y" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license || true
-          # También para el SDK de GitHub por si lo usa
-          mkdir -p ~/.android
-          echo "y" > ~/.android/repositories.cfg || true
+          mkdir -p ~/.android && echo "y" > ~/.android/repositories.cfg || true
+          # Fix: Buildozer busca sdkmanager en tools/bin (viejo) pero el SDK nuevo está en cmdline-tools/latest/bin
+          # Creamos el symlink esperado para que no falle "sdkmanager does not exist"
+          mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+          if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
+            echo "Symlink sdkmanager creado desde ANDROID_HOME"
+          elif [ -f "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
+            ln -sf "/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager" ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>/dev/null || true
+            echo "Symlink sdkmanager creado desde /usr/local"
+          fi
+          ls -lh ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager 2>&1 | head -n 5 || true
           cat ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
 
       - name: Build APK
         working-directory: pycom/app
         run: |
-          rm -rf ~/.buildozer/android/platform/android-sdk/tools 2>/dev/null || true
           buildozer android debug
 
       - name: List APK
