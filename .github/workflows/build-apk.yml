@@ -7,31 +7,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    # Usamos Docker con Buildozer ya configurado (evita sdkmanager 37 / aidl)
+    container:
+      image: kivymd/buildozer:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install system deps
-        run: |
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk zip unzip libffi-dev libssl-dev libbz2-dev
-
-      - name: Install Buildozer
-        run: |
-          pip install --upgrade pip
-          pip install buildozer==1.5.0 cython==0.29.33
-
-      - name: Build APK
+      - name: Build APK (Docker)
         working-directory: pycom/app
         run: |
-          # Limpia cache previa para evitar sdkmanager roto
+          # Limpia cache corrupta si existe
           rm -rf ~/.buildozer 2>/dev/null || true
+          # Fuerza build-tools estable
+          sed -i 's/^android.build_tools_version.*/android.build_tools_version = 33.0.2/' buildozer.spec || echo "android.build_tools_version = 33.0.2" >> buildozer.spec
           buildozer android debug
 
       - name: List APK
