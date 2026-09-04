@@ -15,14 +15,13 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.4
       - name: Build Debug APK
         working-directory: pycom/android
         run: |
-          chmod +x gradlew || true
-          # Si no hay wrapper, usa gradle directo
-          if [ -f "gradlew" ]; then ./gradlew assembleDebug --stacktrace
-          else gradle assembleDebug --stacktrace
-          fi
+          gradle --version
+          gradle assembleDebug --stacktrace
       - name: List APK
         if: always()
         run: |
