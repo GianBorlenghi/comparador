@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pergamino Precios</title>
+<meta name="theme-color" content="#00796B">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <h1>🛒 Pergamino Precios</h1>
+  <p>MasOnline • VEA • Carrefour — compara y ahorrá</p>
+</header>
+
+<div class="search-card">
+  <div class="search-row">
+    <input id="q" placeholder="Buscá: coca cola 2.25, leche serenisima..." autocomplete="off">
+    <button id="btnBuscar">Buscar</button>
+  </div>
+  <div class="chips" id="chips"></div>
+</div>
+<div id="status">Tocá una sugerencia o escribí para comparar</div>
+
+<div id="results"></div>
+<div id="promos"></div>
+
+<nav class="nav">
+  <button id="nav-comparar" class="active" onclick="showTab('comparar')"><span>🔍</span>Comparar</button>
+  <button id="nav-promos" onclick="showTab('promos')"><span>💳</span>Promos bancarias</button>
+</nav>
+
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js'); }
+</script>
+</body>
+</html>
